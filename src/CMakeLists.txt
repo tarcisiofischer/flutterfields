@@ -13,4 +13,6 @@ gba_exec(
   TILEMAP
   tilemap.json
 )
-
+target_compile_options(
+  flutterfields PRIVATE -I${CMAKE_SOURCE_DIR}/src/
+)

@@ -1,8 +1,6 @@
 #include <gba.h>
 #include <random.h>
-
-// TODO: Add current path to incdir
-#include "init.h"
+#include <init.h>
 
 struct Screen {
   virtual void update() = 0;
