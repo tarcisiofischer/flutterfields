@@ -8,7 +8,7 @@ gba_exec(
   rand.h
   SPRITESHEETS
   title_screen.png
-  character.png
+  objects.png
   tileset.png
   TILEMAP
   tilemap.json

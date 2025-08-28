@@ -20,25 +20,10 @@ struct TitleScreen : public Screen {
   }
 
   void show() {
-    #include <spritesheet_title_screen.inc>
-    static auto const TILESET_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x4000);
-    for (u16_t i = 0; i < PALETTE_SIZE; ++i) {
-      BG_PALETTE[i] = PALETTE[i];
-    }
-    for (u16_t i = 0; i < TILESET_SIZE; i++) {
-      TILESET_PTR[i] = TILESET[i];
-    }
-    static auto const TILEMAP_BG0_PTR = (volatile u16_t*)(0x06000000 + 0 * 0x800);
-    u16_t i = 0;
-    for (u16_t y = 0; y < 20; ++y) {
-      for (u16_t x = 0; x < 30; ++x) {
-        TILEMAP_BG0_PTR[32 * y + x] = i;
-        i++;
-      }
-    }
+    load_title_screen_spritesheet();
 
     static auto const TILEMAP_BG1_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x800);
-    i = 0;
+    u16_t i = 0;
     for (u16_t y = 0; y < 20; ++y) {
       for (u16_t x = 0; x < 30; ++x) {
         TILEMAP_BG1_PTR[32 * y + x] = 0;
@@ -86,67 +71,49 @@ struct MainGameScreen : public Screen {
   MainGameScreen(Controller& c) : controller(c) {}
 
   void init() {
-    #include <spritesheet_tileset.inc>
-    static auto const TILESET_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x4000);
-    for (u16_t i = 0; i < PALETTE_SIZE; ++i) {
-      BG_PALETTE[i] = PALETTE[i];
-    }
-    for (u16_t i = 0; i < TILESET_SIZE; i++) {
-      TILESET_PTR[i] = TILESET[i];
-    }
-    static auto const TILEMAP_BG0_PTR = (volatile u16_t*)(0x06000000 + 0 * 0x800);
-    static auto const TILEMAP_BG1_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x800);
+    load_main_game_spritesheet();
+    load_main_game_tilemap();
 
-    #include <tilemap.inc>
-
-    u16_t i = 0;
-    for (u16_t y = 0; y < 16; ++y) {
-      for (u16_t x = 0; x < 16; ++x) {
-        TILEMAP_BG0_PTR[2*32 * y + 2*x + 0] = 4*TILEMAP_bg0[i];
-        TILEMAP_BG0_PTR[2*32 * y + 2*x + 1] = 4*TILEMAP_bg0[i] + 1;
-        TILEMAP_BG0_PTR[2*32 * y + 2*x + 32] = 4*TILEMAP_bg0[i] + 2;
-        TILEMAP_BG0_PTR[2*32 * y + 2*x + 33] = 4*TILEMAP_bg0[i] + 3;
-
-        i++;
-      }
-    }
-
-    i = 0;
-    for (u16_t y = 0; y < 16; ++y) {
-      for (u16_t x = 0; x < 16; ++x) {
-        TILEMAP_BG1_PTR[2*32 * y + 2*x + 0] = 4*TILEMAP_bg1[i];
-        TILEMAP_BG1_PTR[2*32 * y + 2*x + 1] = 4*TILEMAP_bg1[i] + 1;
-        TILEMAP_BG1_PTR[2*32 * y + 2*x + 32] = 4*TILEMAP_bg1[i] + 2;
-        TILEMAP_BG1_PTR[2*32 * y + 2*x + 33] = 4*TILEMAP_bg1[i] + 3;
-
-        i++;
-      }
-    }
-
+    main_char = OAM_attr::get_obj(OAM_attr::next_available_id());
+    main_char->set_size(OAM_attr::ObjectSize::_16x16);
+    main_char->set_sprite(OAM_attr::step16x16(4));
+    main_char->set_x(240 / 2 - 8);
+    main_char->set_y(160 / 2 - 8);
   }
 
   void update() override {
     static auto const TILEMAP_BG0_PTR = (volatile u16_t*)(0x06000000 + 0 * 0x800);
+
     if (controller.is_pressed(BTN_RIGHT)) {
       x_offset++;
       *REG_BG0HOFS = x_offset;
       *REG_BG1HOFS = x_offset;
+
+      main_char->set_sprite(OAM_attr::step16x16(28));
     }
+
     if (controller.is_pressed(BTN_LEFT)) {
       x_offset--;
       *REG_BG0HOFS = x_offset;
       *REG_BG1HOFS = x_offset;
+
+      main_char->set_sprite(OAM_attr::step16x16(20));
     }
 
     if (controller.is_pressed(BTN_UP)) {
       y_offset--;
       *REG_BG0VOFS = y_offset;
       *REG_BG1VOFS = y_offset;
+
+      main_char->set_sprite(OAM_attr::step16x16(12));
     }
+
     if (controller.is_pressed(BTN_DOWN)) {
       y_offset++;
       *REG_BG0VOFS = y_offset;
       *REG_BG1VOFS = y_offset;
+
+      main_char->set_sprite(OAM_attr::step16x16(4));
     }
   }
 
@@ -154,6 +121,7 @@ private:
   Controller& controller;
   u16_t x_offset = 0;
   u16_t y_offset = 0;
+  volatile OAM_attr* main_char = nullptr;
 };
 
 class GameOrchestrator

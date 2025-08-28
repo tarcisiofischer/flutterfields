@@ -54,21 +54,97 @@ void setup_display() {
   ;
 }
 
-void setup_spritesheet() {
-//  #include <spritesheet_objects.inc>
-//  for (u16_t i = 0; i < TILESET_SIZE; ++i) {
-//    OBJ_TILES[i] = TILESET[i];
-//  }
-//  for (u16_t i = 0; i < PALETTE_SIZE; ++i) {
-//    OBJ_PALETTE1[i] = PALETTE[i];
-//  }
+void setup_objects_spritesheet() {
+  #include <spritesheet_objects.inc>
+  for (u16_t i = 0; i < TILESET_SIZE; ++i) {
+    OBJ_TILES[i] = TILESET[i];
+  }
+  for (u16_t i = 0; i < PALETTE_SIZE; ++i) {
+    OBJ_PALETTE1[i] = PALETTE[i];
+  }
+}
+
+void load_title_screen_spritesheet() {
+  #include <spritesheet_title_screen.inc>
+  static auto const TILESET_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x4000);
+  for (u16_t i = 0; i < PALETTE_SIZE; ++i) {
+    BG_PALETTE[i] = PALETTE[i];
+  }
+  for (u16_t i = 0; i < TILESET_SIZE; i++) {
+    TILESET_PTR[i] = TILESET[i];
+  }
+  static auto const TILEMAP_BG0_PTR = (volatile u16_t*)(0x06000000 + 0 * 0x800);
+  u16_t i = 0;
+  for (u16_t y = 0; y < 20; ++y) {
+    for (u16_t x = 0; x < 30; ++x) {
+      TILEMAP_BG0_PTR[32 * y + x] = i;
+      i++;
+    }
+  }
+}
+
+void load_main_game_spritesheet() {
+  #include <spritesheet_tileset.inc>
+  static auto const TILESET_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x4000);
+  for (u16_t i = 0; i < PALETTE_SIZE; ++i) {
+    BG_PALETTE[i] = PALETTE[i];
+  }
+  for (u16_t i = 0; i < TILESET_SIZE; i++) {
+    TILESET_PTR[i] = TILESET[i];
+  }
+}
+
+void load_main_game_tilemap() {
+  #include <tilemap.inc>
+  static auto const TILEMAP_BG0_PTR = (volatile u16_t*)(0x06000000 + 0 * 0x800);
+  static auto const TILEMAP_BG1_PTR = (volatile u16_t*)(0x06000000 + 1 * 0x800);
+
+  u16_t i = 0;
+  for (u16_t y = 0; y < 16; ++y) {
+    for (u16_t x = 0; x < 16; ++x) {
+      TILEMAP_BG0_PTR[2*32 * y + 2*x + 0] = 4*TILEMAP_bg0[i];
+      TILEMAP_BG0_PTR[2*32 * y + 2*x + 1] = 4*TILEMAP_bg0[i] + 1;
+      TILEMAP_BG0_PTR[2*32 * y + 2*x + 32] = 4*TILEMAP_bg0[i] + 2;
+      TILEMAP_BG0_PTR[2*32 * y + 2*x + 33] = 4*TILEMAP_bg0[i] + 3;
+
+      i++;
+    }
+  }
+
+  i = 0;
+  for (u16_t y = 0; y < 16; ++y) {
+    for (u16_t x = 0; x < 16; ++x) {
+      TILEMAP_BG1_PTR[2*32 * y + 2*x + 0] = 4*TILEMAP_bg1[i];
+      TILEMAP_BG1_PTR[2*32 * y + 2*x + 1] = 4*TILEMAP_bg1[i] + 1;
+      TILEMAP_BG1_PTR[2*32 * y + 2*x + 32] = 4*TILEMAP_bg1[i] + 2;
+      TILEMAP_BG1_PTR[2*32 * y + 2*x + 33] = 4*TILEMAP_bg1[i] + 3;
+
+      i++;
+    }
+  }
+
+  u16_t x = 0;
+  u16_t y = 0;
+  for (u16_t i = 0; i < TILEMAP_objs_SIZE; ++i) {
+    if (TILEMAP_objs[i] != 0) {
+      volatile OAM_attr* obj = OAM_attr::get_obj(OAM_attr::next_available_id());
+      obj->set_size(OAM_attr::ObjectSize::_16x16);
+      obj->set_sprite(OAM_attr::step16x16(TILEMAP_objs[i]));
+      obj->set_x(16 * x);
+      obj->set_y(16 * y);
+    }
+
+    x++;
+    if (x == 16) {
+      x = 0;
+      y++;
+    }
+  }
 }
 
 void init() {
   setup_display();
-  setup_spritesheet();
-  //setup_bg_tileset();
-  //setup_tilemaps();
+  setup_objects_spritesheet();
   Sound::init();
 }
 
